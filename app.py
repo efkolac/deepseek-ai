@@ -12,9 +12,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Model configuration
-MODEL_REPO = "deepseek-ai/deepseek-llm-7b-chat"
+MODEL_REPO = "deepseek-ai/deepseek-llm-67b-chat"
 MODEL_DIR = Path(os.environ.get("MODEL_DIR", "/model"))
-LOCAL_MODEL_DIR = MODEL_DIR / "deepseek-ai/deepseek-llm-7b-chat"
+LOCAL_MODEL_DIR = MODEL_DIR / "deepseek-ai/deepseek-llm-67b-chat"
 
 tokenizer = None
 model = None
@@ -151,7 +151,7 @@ def handler(event):
         response = tokenizer.decode(outputs[0], skip_special_tokens=True)
         response = response.split("[/INST]")[-1].strip()
         
-        return {"response": MODEL_REPO + response}
+        return {"response": MODEL_REPO +response}
     
     except torch.cuda.OutOfMemoryError:
         return {"error": "GPU out of memory - try reducing max_length"}
