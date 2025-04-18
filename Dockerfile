@@ -1,31 +1,38 @@
-# Use official Python image as base
-FROM python:3.10-slim
+# Use the official PyTorch image as base
+FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
 
 # Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    MODEL_BASE_PATH=/models
+ENV DEBIAN_FRONTEND=noninteractive \
+    MODEL_DIR=/model \
+    HF_HOME=/hf_cache \
+    TORCH_HOME=/torch_cache
 
-# Create directory structure (adjust according to your model paths)
-RUN mkdir -p ${MODEL_BASE_PATH}/DeepSeek-R1-Distill-Qwen-1.5B
-
-# Install system dependencies (adjust based on your needs)
-RUN apt-get update && apt-get install -y \
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     git \
-    gcc \
-    g++ \
+    wget \
+    curl \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Create directory structure
+RUN mkdir -p /app /context_files ${MODEL_DIR} ${HF_HOME} ${TORCH_HOME}
 
-
-# Copy your application code
-COPY . /app
+# Set working directory (must come before COPY commands)
 WORKDIR /app
 
-# Copy your models (option 1 - if models are in your project)
-# COPY ./models/DeepSeek-R1-Distill-Qwen-1.5B /models/DeepSeek-R1-Distill-Qwen-1.5B
+# Copy requirements first for better caching
+COPY requirements.txt .
 
-# Entrypoint
-CMD ["python", "app.py"]
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Verify files are in place
+RUN ls -la /app
+
+# Run the application
+CMD ["python", "-u", "app.py"]

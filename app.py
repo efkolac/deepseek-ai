@@ -2,51 +2,43 @@ import runpod
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import os
-from typing import Optional
 from pathlib import Path
 import logging
 import shutil
-from huggingface_hub import hf_hub_download
+from huggingface_hub import hf_hub_download, snapshot_download
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Model configuration
-# MODEL_DIR = Path("models/DeepSeek-R1-Distill-Llama-8B")
-# MODEL_DIR = Path("models/DeepSeek-R1-Distill-Qwen-1.5B")
-MODEL_DIR = Path(os.path.join(os.environ.get("MODEL_BASE_PATH", "models"), "DeepSeek-R1-Distill-Qwen-1.5B"))
-LOCAL_MODEL_DIR = Path("models/DeepSeek-R1-Distill-Qwen-1.5B")  # Custom local folder
+MODEL_REPO = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
+MODEL_DIR = Path(os.environ.get("MODEL_DIR", "/model"))
+LOCAL_MODEL_DIR = MODEL_DIR / "DeepSeek-R1-Distill-Qwen-1.5B"
 
 tokenizer = None
 model = None
+
 def download_model():
-    """Force-download the model to a local directory (no cache)"""
+    """Download the model with retries and progress tracking"""
     try:
         # Create fresh directory
         if LOCAL_MODEL_DIR.exists():
-            shutil.rmtree(LOCAL_MODEL_DIR)  # Delete existing
-        LOCAL_MODEL_DIR.mkdir(parents=True)
+            shutil.rmtree(LOCAL_MODEL_DIR)
+        LOCAL_MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
-        logger.info(f"Downloading {MODEL_DIR} to {LOCAL_MODEL_DIR}...")
+        logger.info(f"Downloading {MODEL_REPO} to {LOCAL_MODEL_DIR}...")
 
-        # Download all required files
-        required_files = [
-            "config.json",
-            "model.safetensors",  # or "pytorch_model.bin"
-            "tokenizer.json",
-            "special_tokens_map.json",
-            "generation_config.json"
-        ]
-
-        for file in required_files:
-            hf_hub_download(
-                repo_id=MODEL_DIR,
-                filename=file,
-                local_dir=LOCAL_MODEL_DIR,
-                force_download=True,  # Ignore cache
-                resume_download=False  # Fresh download
-            )
+        # Use snapshot_download for more reliable downloads
+        snapshot_download(
+            repo_id=MODEL_REPO,
+            local_dir=LOCAL_MODEL_DIR,
+            local_dir_use_symlinks=False,
+            resume_download=True,
+            allow_patterns=["*.json", "*.model", "*.safetensors", "*.bin", "*.txt"],
+            ignore_patterns=["*.h5", "*.ot", "*.tflite"],
+            max_workers=4
+        )
 
         logger.info("Download complete!")
         return LOCAL_MODEL_DIR
@@ -55,28 +47,34 @@ def download_model():
         logger.error(f"Download failed: {e}")
         raise
 
-
 def load_model():
-    """ Load model and tokenizer """
+    """Load model and tokenizer with error handling"""
     global tokenizer, model
-    logger.info("Loading model...")
-    if not MODEL_DIR.exists():
-        raise FileNotFoundError(f"Model 4 directory not found at {MODEL_DIR}")
     
     try:
-        # Step 1: Force download (no cache)
-        model_path = download_model()
+        # Download model if not already present
+        if not (LOCAL_MODEL_DIR / "model.safetensors").exists():
+            download_model()
 
-        # Step 2: Load from local files
         logger.info("Loading model from local directory...")
-        tokenizer = AutoTokenizer.from_pretrained(model_path)
-        model = AutoModelForCausalLM.from_pretrained(
-            model_path,
-            torch_dtype=torch.bfloat16,
-            device_map="auto",
+        
+        # Load tokenizer
+        tokenizer = AutoTokenizer.from_pretrained(
+            LOCAL_MODEL_DIR,
             trust_remote_code=True
         )
+        
+        # Load model with device map and memory optimization
+        model = AutoModelForCausalLM.from_pretrained(
+            LOCAL_MODEL_DIR,
+            torch_dtype=torch.bfloat16,
+            device_map="auto",
+            trust_remote_code=True,
+            low_cpu_mem_usage=True
+        )
+        
         logger.info(f"Model loaded on {model.device}")
+        return True
 
     except Exception as e:
         logger.error(f"Model loading failed: {e}")

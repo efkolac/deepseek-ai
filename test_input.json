@@ -2,6 +2,6 @@
   "input": {
     "prompt": "what is arduino?",
     "context": "no context",
-    "max_length": 1000
+    "max_length":4000
   }
 }
