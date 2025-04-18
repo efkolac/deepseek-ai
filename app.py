@@ -12,9 +12,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Model configuration
-MODEL_REPO = "deepseek-ai/deepseek-moe-16b-chat"
+MODEL_REPO = "deepseek-ai/deepseek-llm-7b-chat"
 MODEL_DIR = Path(os.environ.get("MODEL_DIR", "/model"))
-LOCAL_MODEL_DIR = MODEL_DIR / "deepseek-ai/deepseek-moe-16b-chat"
+LOCAL_MODEL_DIR = MODEL_DIR / "deepseek-ai/deepseek-llm-7b-chat"
 
 tokenizer = None
 model = None
@@ -131,9 +131,9 @@ def handler(event):
         
         # Format prompt
         if context:
-            formatted_prompt = f"<s>[INST] <context>\n{context}\n</context>\n\n{prompt} [/INST]"
+            formatted_prompt = f"<s>[INST] MODEL_REPO <context>\n{context}\n</context>\n\n{prompt} [/INST]"
         else:
-            formatted_prompt = f"<s>[INST] {prompt} [/INST]"
+            formatted_prompt = f"<s>[INST] MODEL_REPO {prompt} [/INST]"
         
         # Generate response
         inputs = tokenizer(formatted_prompt, return_tensors="pt").to(model.device)
