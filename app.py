@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Model configuration
-MODEL_REPO = "deepseek-ai/deepseek-ai/DeepSeek-V2-Lite"
+MODEL_REPO = "deepseek-ai/DeepSeek-V2-Lite"
 MODEL_DIR = Path(os.environ.get("MODEL_DIR", "/model"))
 LOCAL_MODEL_DIR = MODEL_DIR / "deepseek-ai/DeepSeek-V2-Lite"
 
