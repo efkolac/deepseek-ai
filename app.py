@@ -131,9 +131,9 @@ def handler(event):
         
         # Format prompt
         if context:
-            formatted_prompt = f"<s>[INST] MODEL_REPO <context>\n{context}\n</context>\n\n{prompt} [/INST]"
+            formatted_prompt = f"<s>[INST]  <context>\n{context}\n</context>\n\n{prompt} [/INST]"
         else:
-            formatted_prompt = f"<s>[INST] MODEL_REPO {prompt} [/INST]"
+            formatted_prompt = f"<s>[INST]  {prompt} [/INST]"
         
         # Generate response
         inputs = tokenizer(formatted_prompt, return_tensors="pt").to(model.device)
@@ -151,7 +151,7 @@ def handler(event):
         response = tokenizer.decode(outputs[0], skip_special_tokens=True)
         response = response.split("[/INST]")[-1].strip()
         
-        return {"response": response}
+        return {"response": MODEL_REPO + response}
     
     except torch.cuda.OutOfMemoryError:
         return {"error": "GPU out of memory - try reducing max_length"}
