@@ -6,11 +6,11 @@ from pathlib import Path
 import logging
 import shutil
 from huggingface_hub import hf_hub_download, snapshot_download
+from dotenv import load_dotenv
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 # Model configuration
 MODEL_REPO = "meta-llama/Llama-3.3-70B-Instruct"
 MODEL_DIR = Path(os.environ.get("MODEL_DIR", "/model"))
@@ -18,6 +18,9 @@ LOCAL_MODEL_DIR = MODEL_DIR / "meta-llama/Llama-3.3-70B-Instruct"
 
 tokenizer = None
 model = None
+
+load_dotenv()
+hf_token = os.getenv("HF_TOKEN")
 
 def download_model():
     """Download the model with retries and progress tracking"""
@@ -75,6 +78,7 @@ def load_model():
             quantization_config=bnb_config,   # Add this line
             device_map="auto",
             trust_remote_code=True,
+            token= hf_token
         )
         
         logger.info(f"Model loaded on {model.device}")
