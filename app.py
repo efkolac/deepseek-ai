@@ -70,7 +70,8 @@ def load_model():
             torch_dtype=torch.bfloat16,
             device_map="auto",
             trust_remote_code=True,
-            low_cpu_mem_usage=True
+            low_cpu_mem_usage=True,
+            load_in_4bit=True  # Quantized to 4-bit
         )
         
         logger.info(f"Model loaded on {model.device}")
