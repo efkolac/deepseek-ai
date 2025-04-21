@@ -112,7 +112,7 @@ def handler(event):
         top_p = input_data.get('top_p', 0.9)
         
         folder_path = input_data.get('folder_path', './context_files')  # Default folder
-        
+        filecount=0
         # Read and append files from folder if it exists
         if os.path.exists(folder_path) and os.path.isdir(folder_path):
             file_contents = []
@@ -121,6 +121,7 @@ def handler(event):
                 if file_path.is_file():
                     try:
                         with open(file_path, 'r', encoding='utf-8') as f:
+                            filecount+=1
                             file_contents.append(f"File: {file_name}\n{f.read().strip()}")
                     except Exception as e:
                         logger.warning(f"Could not read file {file_name}: {str(e)}")
@@ -128,7 +129,10 @@ def handler(event):
             if file_contents:
                 files_context = "\n\n".join(file_contents)
                 context = f"{context}\n\n{files_context}" if context else files_context
-        
+            else:
+                return {"response":"no context."}
+        else:
+            return {"response":"Böyle bir dosya bulunamadı."}
         # Format prompt
         if context:
             formatted_prompt = f"<s>[INST]  <context>\n{context}\n</context>\n\n{prompt} [/INST]"
@@ -151,7 +155,7 @@ def handler(event):
         response = tokenizer.decode(outputs[0], skip_special_tokens=True)
         response = response.split("[/INST]")[-1].strip()
         
-        return {"response":response}
+        return {"response": filecount + response}
     
     except torch.cuda.OutOfMemoryError:
         return {"error": "GPU out of memory - try reducing max_length"}
