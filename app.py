@@ -12,9 +12,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Model configuration
-MODEL_REPO = "deepseek-ai/deepseek-llm-67b-chat"
+MODEL_REPO = "meta-llama/Llama-3.3-70B-Instruct"
 MODEL_DIR = Path(os.environ.get("MODEL_DIR", "/model"))
-LOCAL_MODEL_DIR = MODEL_DIR / "deepseek-ai/deepseek-llm-67b-chat"
+LOCAL_MODEL_DIR = MODEL_DIR / "meta-llama/Llama-3.3-70B-Instruct"
 
 tokenizer = None
 model = None
