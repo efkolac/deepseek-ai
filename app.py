@@ -1,5 +1,5 @@
 import runpod
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import os
 from pathlib import Path
@@ -66,16 +66,11 @@ def load_model():
             LOCAL_MODEL_DIR,
             trust_remote_code=True
         )
-        bnb_config = BitsAndBytesConfig(
-            load_in_4bit=True,               # Enable 4-bit quantization
-            bnb_4bit_quant_type="nf4",       # Use normalized float 4-bit
-            bnb_4bit_compute_dtype=torch.bfloat16,  # Computation dtype
-            bnb_4bit_use_double_quant=True   # Optional: Nested quantization for better accuracy
-        )
+        
         # Load model with device map and memory optimization
         model = AutoModelForCausalLM.from_pretrained(
             LOCAL_MODEL_DIR,
-            quantization_config=bnb_config,   # Add this line
+            torch_dtype=torch.bfloat16,
             device_map="auto",
             trust_remote_code=True,
             token= hf_token
