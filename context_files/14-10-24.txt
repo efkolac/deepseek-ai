@@ -1,5 +1,0 @@
-Yeni FT açılış süreci
-
--mail açılması
--logo kullanıcısı
--erp kullanıcısının açılması
